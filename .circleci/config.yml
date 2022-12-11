@@ -1,23 +1,13 @@
 version: 2.1
 orbs:
-  docker: circleci/docker@2.1.2
-jobs:
-  build-docker-image:
-      executor:
-        name: docker/docker
-        tag: "3.6"
-      steps:
-        - checkout
-        - docker/install-docker-tools
-        - setup_remote_docker:
-            docker_layer_caching: true
-        - run:
-            name: Build and push Docker image
-            command: |
-              docker build -t dotnetcoreapi.azurecr.io/dotnet-api:latest .
-              docker login -u $DOCKER_USER -p $DOCKER_PASS dotnetcoreapi.azurecr.io
-              docker push dotnetcoreapi.azurecr.io/dotnet-api:latest
+  aws-ecr: circleci/aws-ecr@8.1.3
 workflows:
-  build-and-deploy:
+  build_and_push_image:
     jobs:
-      - build-docker-image
+      - aws-ecr/build-and-push-image:
+          context: dev
+          create-repo: true
+          dockerfile: Dockerfile
+          path: .
+          repo: dotnet-ecr
+          tag: "$CIRCLE_SHA1"
